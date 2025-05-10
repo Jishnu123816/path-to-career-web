@@ -1,5 +1,5 @@
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Link, useLocation } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/components/ui/use-toast";
@@ -9,23 +9,37 @@ import {
   SheetTrigger,
 } from "@/components/ui/sheet";
 import { List } from "lucide-react";
+import { signOut } from "@/utils/firebase";
 
 const Navbar = () => {
   const location = useLocation();
   const { toast } = useToast();
-  const [isLoggedIn, setIsLoggedIn] = useState(() => {
-    // Check if user is logged in from localStorage
-    return localStorage.getItem("isLoggedIn") === "true";
-  });
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
 
-  const handleSignOut = () => {
-    localStorage.removeItem("isLoggedIn");
-    localStorage.removeItem("user");
-    setIsLoggedIn(false);
-    toast({
-      title: "Signed out successfully",
-      description: "You have been signed out of your account.",
-    });
+  // Check authentication status whenever component loads or route changes
+  useEffect(() => {
+    const authStatus = localStorage.getItem("isLoggedIn") === "true";
+    setIsLoggedIn(authStatus);
+  }, [location.pathname]);
+
+  const handleSignOut = async () => {
+    const { success } = await signOut();
+    
+    if (success) {
+      localStorage.removeItem("isLoggedIn");
+      localStorage.removeItem("user");
+      setIsLoggedIn(false);
+      toast({
+        title: "Signed out successfully",
+        description: "You have been signed out of your account.",
+      });
+    } else {
+      toast({
+        title: "Sign out failed",
+        description: "There was an issue signing you out. Please try again.",
+        variant: "destructive",
+      });
+    }
   };
 
   const isActive = (path: string) => location.pathname === path;

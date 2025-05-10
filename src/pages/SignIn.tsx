@@ -25,6 +25,7 @@ const SignIn = () => {
     email: "",
     password: "",
   });
+  const [error, setError] = useState("");
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
@@ -32,23 +33,23 @@ const SignIn = () => {
       ...prev,
       [name]: value,
     }));
+    // Clear error when user starts typing
+    setError("");
   };
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     setIsLoading(true);
+    setError("");
 
     try {
-      // Demo credentials for easy testing
-      if (formData.email !== "demo@example.com") {
-        // Show message about using demo credentials
+      // Demo credentials hint
+      if (formData.email === "demo@example.com" && formData.password !== "password123") {
         toast({
           title: "Use Demo Credentials",
-          description: "Please use email: demo@example.com and password: password123 to sign in.",
+          description: "To use the demo account, the password should be password123",
           variant: "default",
         });
-        setIsLoading(false);
-        return;
       }
 
       const user = await signIn(formData.email, formData.password);
@@ -60,6 +61,7 @@ const SignIn = () => {
         });
         navigate("/");
       } else {
+        setError("Invalid email or password. Please try again.");
         toast({
           title: "Sign In Failed",
           description: "Invalid credentials. Please try again.",
@@ -67,6 +69,7 @@ const SignIn = () => {
         });
       }
     } catch (error) {
+      setError("An unexpected error occurred. Please try again.");
       toast({
         title: "Error",
         description: "An unexpected error occurred. Please try again.",
@@ -92,6 +95,11 @@ const SignIn = () => {
             </CardHeader>
             <CardContent>
               <form onSubmit={handleSubmit} className="space-y-4">
+                {error && (
+                  <div className="p-3 bg-destructive/15 text-destructive rounded-md text-sm">
+                    {error}
+                  </div>
+                )}
                 <div className="space-y-2">
                   <Label htmlFor="email">Email</Label>
                   <Input

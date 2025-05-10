@@ -29,6 +29,7 @@ const SignUp = () => {
     confirmPassword: "",
     acceptTerms: false,
   });
+  const [error, setError] = useState("");
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value, type, checked } = e.target;
@@ -36,6 +37,8 @@ const SignUp = () => {
       ...prev,
       [name]: type === "checkbox" ? checked : value,
     }));
+    // Clear error when user starts typing
+    setError("");
   };
 
   const handleCheckboxChange = (checked: boolean) => {
@@ -43,15 +46,19 @@ const SignUp = () => {
       ...prev,
       acceptTerms: checked,
     }));
+    // Clear error when user interacts with checkbox
+    setError("");
   };
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     setIsLoading(true);
+    setError("");
 
     try {
       // Basic validation
       if (formData.password !== formData.confirmPassword) {
+        setError("Passwords do not match");
         toast({
           title: "Passwords do not match",
           description: "Please ensure both passwords are the same.",
@@ -62,6 +69,7 @@ const SignUp = () => {
       }
 
       if (formData.password.length < 8) {
+        setError("Password must be at least 8 characters long");
         toast({
           title: "Password too short",
           description: "Password must be at least 8 characters long.",
@@ -72,6 +80,7 @@ const SignUp = () => {
       }
 
       if (!formData.acceptTerms) {
+        setError("You must accept the terms and conditions");
         toast({
           title: "Terms and Conditions",
           description: "Please accept the terms and conditions to continue.",
@@ -81,8 +90,7 @@ const SignUp = () => {
         return;
       }
 
-      // In a real app, we'd actually register the user
-      // For this demo, let's just use our mock signUp function
+      // Create user with Firebase
       const user = await signUp(formData.name, formData.email, formData.password);
 
       if (user) {
@@ -92,6 +100,7 @@ const SignUp = () => {
         });
         navigate("/");
       } else {
+        setError("This email may already be registered or there was an error creating your account");
         toast({
           title: "Registration failed",
           description: "This email may already be registered. Please try another.",
@@ -99,6 +108,7 @@ const SignUp = () => {
         });
       }
     } catch (error) {
+      setError("An unexpected error occurred. Please try again.");
       toast({
         title: "Error",
         description: "An unexpected error occurred. Please try again.",
@@ -124,6 +134,11 @@ const SignUp = () => {
             </CardHeader>
             <CardContent>
               <form onSubmit={handleSubmit} className="space-y-4">
+                {error && (
+                  <div className="p-3 bg-destructive/15 text-destructive rounded-md text-sm">
+                    {error}
+                  </div>
+                )}
                 <div className="space-y-2">
                   <Label htmlFor="name">Full Name</Label>
                   <Input
